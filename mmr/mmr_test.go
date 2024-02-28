@@ -247,7 +247,10 @@ func TestInstance(t *testing.T) {
 
 	t.Run("#GetProof", func(t *testing.T) {
 		proofMmr := memoryBasedMmr1.GetProof([]int64{18})
-		serialized := proofMmr.Serialize()
+		serialized, err := proofMmr.Serialize()
+		if err != nil {
+			t.Error(err)
+		}
 		fmt.Print(fmt.Sprintf("\n\nProofhex:\n0x%x\n\n", serialized))
 		computedPrfMmr := FromSerialized(digest.Keccak256FlyHash, serialized) // testing it doesnt throw
 		_, has18 := computedPrfMmr.GetUnverified(18)

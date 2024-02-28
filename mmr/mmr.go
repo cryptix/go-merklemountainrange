@@ -12,15 +12,18 @@ import (
 type Mmr struct {
 	digest digest.Digest
 	db     db.Db
-	// consider: do i even need a semephore?
 }
 
 func New(_digest digest.Digest, _db db.Db) *Mmr {
 	return &Mmr{digest: _digest, db: _db}
 }
 
-func FromSerialized(_digest digest.Digest, serializedDb []byte) *Mmr {
-	return New(_digest, db.FromSerialized(serializedDb)) /*uses a memoryBasedDb*/
+func FromSerialized(_digest digest.Digest, input []byte) *Mmr {
+	ser, err := db.FromSerialized(input)
+	if err != nil {
+		panic(err)
+	}
+	return New(_digest, ser) /*uses a memoryBasedDb*/
 }
 
 func (mmr *Mmr) GetNodeLength() int64 {
@@ -88,7 +91,7 @@ func (mmr *Mmr) GetProof(leafIndexes []int64, referenceTreeLength ...int64) *Mmr
 	}
 	return New(mmr.digest, db)
 }
-func (mmr *Mmr) Serialize() []byte {
+func (mmr *Mmr) Serialize() ([]byte, error) {
 	return mmr.db.Serialize()
 }
 

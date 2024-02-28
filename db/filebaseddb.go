@@ -142,14 +142,17 @@ func (db *Filebaseddb) SetWordSize(wordSize int64) {
 // This function is not recomended to run on a file based db because
 // it iterates every single node, and file based dbs have
 // the entire dataset as opposed to a proof-based db (sparse dataset)
-func (db *Filebaseddb) Serialize() []byte {
+func (db *Filebaseddb) Serialize() ([]byte, error) {
 	nodes := db.getNodes()
 	memDb := NewMemorybaseddb(db.GetLeafLength(), nodes)
 	return memDb.Serialize()
 }
 
 func (db *Filebaseddb) getNodes() map[int64][]byte {
-	db.fd.Sync()
+	err := db.fd.Sync()
+	if err != nil {
+		panic(errors.New("Error syncing filebased db"))
+	}
 	wordSize := db.GetWordSize()
 	stat, err := db.fd.Stat()
 	if err != nil {

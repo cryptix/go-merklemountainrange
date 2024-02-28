@@ -5,5 +5,8 @@ type Db interface {
 	Set([]byte, int64)
 	GetLeafLength() int64
 	SetLeafLength(int64)
-	Serialize() []byte
+	Serialize() ([]byte, error)
 }
+
+var _ Db = &Memorybaseddb{}
+var _ Db = &Filebaseddb{}

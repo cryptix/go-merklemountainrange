@@ -37,32 +37,38 @@ type Thing struct {
 	nodes  [][][]byte
 }
 
-func FromSerialized(input []byte) *Memorybaseddb { //likely a much easier way to do this
-	output := []interface{}{}
+func FromSerialized(input []byte) (*Memorybaseddb, error) { //likely a much easier way to do this
+	var output []any
 	err := rlp.DecodeBytes(input, &output)
-
 	if err != nil {
-		fmt.Print("RRRRRR ", err)
-		panic(errors.New("Problem rlp decoding db node and length data"))
+		return nil, fmt.Errorf("Problem rlp decoding db node and length data: %w", err)
 	}
+
 	if len(output) != 2 {
-		panic(errors.New("RLP formatting error. Outer tuple should be `[leafLength,nodes]`"))
+		return nil, errors.New("RLP formatting error - Outer tuple should be `[leafLength,nodes]`")
 	}
+
 	leafLengthArr, leafLengthOk := output[0].([]byte)
 	if !leafLengthOk {
-		panic(errors.New("RLP formatting error. `leafLength` unable to cast to `[]byte`"))
+		return nil, errors.New("RLP formatting error - `leafLength` unable to cast to `[]byte`")
 	}
+
 	leafLengthBuffer := make([]byte, 8-len(leafLengthArr))
 	leafLengthBuffer = append(leafLengthBuffer, leafLengthArr...)
 	leafLength := int64(binary.BigEndian.Uint64(leafLengthBuffer))
-	nodesArr, nodesArrayOk := output[1].([]interface{})
+	nodesArr, nodesArrayOk := output[1].([]any)
+
 	if !nodesArrayOk {
-		panic(errors.New("RLP formatting error. `nodesArray` unable to cast to `[][][]byte`"))
+		return nil, errors.New("RLP formatting error - `nodesArray` unable to cast to `[][][]byte`")
 	}
-	nodes := map[int64][]byte{}
+
+	nodes := make(map[int64][]byte, len(nodesArr))
 
 	for _, _keyPair := range nodesArr {
-		keyPair, _ := _keyPair.([]interface{})
+		keyPair, ok := _keyPair.([]any)
+		if !ok {
+			return nil, fmt.Errorf("RLP formatting error - `keyPair` unable to cast to `[]any` got %T", _keyPair)
+		}
 		unpaddedKeyBuffer := keyPair[0].([]byte)
 		keyBuffer := make([]byte, 8-len(unpaddedKeyBuffer))
 		keyBuffer = append(keyBuffer, unpaddedKeyBuffer...)
@@ -71,14 +77,15 @@ func FromSerialized(input []byte) *Memorybaseddb { //likely a much easier way to
 	}
 
 	db := Memorybaseddb{nodes: nodes, leafLength: leafLength}
-	return &db
+	return &db, nil
 }
-func (db *Memorybaseddb) Serialize() []byte {
+
+func (db *Memorybaseddb) Serialize() ([]byte, error) {
 	output := []interface{}{}
 
 	leafLengthBytes, err := rlp.EncodeToBytes(uint(db.GetLeafLength()))
 	if err != nil {
-		panic(errors.New("problem representing leafLength in []byte"))
+		return nil, errors.New("problem representing leafLength in []byte")
 	}
 
 	nodes := [][][]byte{}
@@ -95,8 +102,8 @@ func (db *Memorybaseddb) Serialize() []byte {
 
 	serializedOutput, err := rlp.EncodeToBytes(output)
 	if err != nil {
-		panic(errors.New("Problem rlp encoding db (nodes and leafLength)"))
+		return nil, errors.New("Problem rlp encoding db (nodes and leafLength)")
 	}
 
-	return serializedOutput
+	return serializedOutput, nil
 }
