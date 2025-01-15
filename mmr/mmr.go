@@ -4,9 +4,9 @@ import (
 	"errors"
 	"math"
 
-	"github.com/zmitton/go-merklemountainrange/db"
-	"github.com/zmitton/go-merklemountainrange/digest"
-	"github.com/zmitton/go-merklemountainrange/position"
+	"github.com/cryptix/go-merklemountainrange/db"
+	"github.com/cryptix/go-merklemountainrange/digest"
+	"github.com/cryptix/go-merklemountainrange/position"
 )
 
 type Mmr struct {

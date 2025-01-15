@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/zmitton/go-merklemountainrange/db"
-	"github.com/zmitton/go-merklemountainrange/digest"
+	"github.com/cryptix/go-merklemountainrange/db"
+	"github.com/cryptix/go-merklemountainrange/digest"
 
 	"testing"
 )
