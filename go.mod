@@ -1,4 +1,4 @@
-module github.com/zmitton/go-merklemountainrange
+module github.com/cryptix/go-merklemountainrange
 
 go 1.21.4
 
